@@ -92,26 +92,58 @@ mod DataSources {
 		avgPace: String,
 		calories: String
 	}
-}
 
-mod Importer {
-	use csv;
-
-	#[macro_export]
-	macro_rules! read_from_file {
-		($path: expr,$typ: ty) => {
-			let mut rdr = csv::Reader::from_path($path.to_string()).unwrap();
-
-			for result in rdr.deserialize() {
-				let record: $typ = result.unwrap();
-				println!("{:?}", record);
-			}
-		};
+	#[derive(Debug, Deserialize)]
+	pub struct All {
+		pub user: User,
+		pub activity: Activity,
+		pub activity_minute: ActivityMinute,
+		pub activity_stage: ActivityStage,
+		pub body: Body,
+		pub heartrate: Heartrate,
+		pub heartrate_auto: HeartrateAuto,
+		pub sleep: Sleep,
+		pub sport: Sport
 	}
 }
 
-mod Formatter {}
+mod Importer {
+	#[macro_export]
+	macro_rules! read_from_file {
+		($path: expr,$typ: ty) => {{
+			let filename = glob::glob(&format!("{}/*", $path)).unwrap().next().unwrap().unwrap();
+			let path = format!("./{}", filename.into_os_string().into_string().unwrap());
 
-mod Processors {}
+			let mut rdr = csv::Reader::from_path(path).unwrap();
 
-fn main() {}
+			let record: $typ = rdr.deserialize().next().unwrap().unwrap();
+			println!("New record: {:?}", record);
+			record
+		}};
+	}
+}
+
+//mod Formatter {}
+
+mod Processor {
+	#![macro_use]
+
+	pub fn export(base_path: &'static str) -> crate::DataSources::All {
+		let response_data: crate::DataSources::All = crate::DataSources::All {
+			user: crate::read_from_file!(format!("{}/USER", base_path), crate::DataSources::User),
+			activity: crate::read_from_file!(format!("{}/ACTIVITY", base_path), crate::DataSources::Activity),
+			activity_minute: crate::read_from_file!(format!("{}/ACTIVITY_MINUTE", base_path), crate::DataSources::ActivityMinute),
+			activity_stage: crate::read_from_file!(format!("{}/ACTIVITY_STAGE", base_path), crate::DataSources::ActivityStage),
+			body: crate::read_from_file!(format!("{}/BODY", base_path), crate::DataSources::Body),
+			heartrate: crate::read_from_file!(format!("{}/HEARTRATE", base_path), crate::DataSources::Heartrate),
+			heartrate_auto: crate::read_from_file!(format!("{}/HEARTRATE_AUTO", base_path), crate::DataSources::HeartrateAuto),
+			sleep: crate::read_from_file!(format!("{}/SLEEP", base_path), crate::DataSources::Sleep),
+			sport: crate::read_from_file!(format!("{}/SPORT", base_path), crate::DataSources::Sport)
+		};
+		response_data
+	}
+}
+
+fn main() {
+	println!("{:?}", Processor::export("./target/ViniciosData"));
+}
