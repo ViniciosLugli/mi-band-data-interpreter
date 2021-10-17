@@ -10,3 +10,11 @@ edition = "2018"
 csv = "1.1"
 serde = { version = "1", features = ["derive"] }
 glob = "0.3.0"
+actix-web = "3"
+actix-multipart = "0.3.0"
+futures-util = "0.3"
+sanitize-filename = "0.2"
+uuid = { version = "0.8", features = ["v4"] }
+async-std = "1.8"
+zip = "0.5"
+zip-extensions = "0.6"
